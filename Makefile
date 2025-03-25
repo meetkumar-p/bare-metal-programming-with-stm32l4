@@ -35,8 +35,15 @@ MAIN_FILE = $(SRC_DIR)/main.c
 
 LINKER_SCRIPT = $(SRC_DIR)/link.ld
 
+SOURCES_WITH_HEADERS = \
+						$(SRC_DIR)/hal.c
+
 SOURCES = \
-			$(MAIN_FILE)
+			$(MAIN_FILE) \
+			$(SOURCES_WITH_HEADERS)
+
+HEADERS = \
+			$(SOURCES_WITH_HEADERS:.c=.h)
 
 OBJECT_NAMES = $(patsubst %.s, %.o, $(patsubst %.c, %.o, $(SOURCES)))
 OBJECTS = $(patsubst %, $(OBJ_DIR)/%, $(OBJECT_NAMES))
@@ -126,7 +133,7 @@ flash: $(TARGET)
 	$(FLASH) -c port=SWD disconnect
 
 format:
-	$(FORMAT) -i $(SOURCES)
+	$(FORMAT) -i $(SOURCES) $(HEADERS)
 
 size: $(TARGET)
 	$(SIZE) --format=berkeley $^

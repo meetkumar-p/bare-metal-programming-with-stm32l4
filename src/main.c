@@ -1,5 +1,30 @@
+#include "hal.h"
+
+#include <stdint.h>
+
 int main(void)
 {
+    uint16_t led_user_1 = PIN('A', 5);
+    uint16_t led_user_2 = PIN('B', 14);
+
+    // enable GPIO clocks for LEDs
+    RCC->AHB2ENR |= BIT(PINBANK(led_user_1));
+    RCC->AHB2ENR |= BIT(PINBANK(led_user_2));
+
+    // set LEDs to output mode
+    gpio_set_mode(led_user_1, GPIO_MODE_OUTPUT);
+    gpio_set_mode(led_user_2, GPIO_MODE_OUTPUT);
+
+    for(;;)
+    {
+        gpio_write(led_user_1, true);
+        gpio_write(led_user_2, false);
+        spin(250000);
+        gpio_write(led_user_1, false);
+        gpio_write(led_user_2, true);
+        spin(250000);
+    }
+
     return 0;
 }
 
