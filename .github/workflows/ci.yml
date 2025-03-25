@@ -1,0 +1,21 @@
+on: [push]
+jobs:
+  build_and_static_analysis:
+    runs-on: ubuntu-latest
+    container:
+      image: meetkumarp/stm32cubeclt-1.18.0:latest
+    env:
+      STM32_CUBE_CLT: /opt/st/stm32cubeclt_1.18.0
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          submodules: "true"
+      - name: Set Git safe directory
+        run: git config --global --add safe.directory "$(pwd)"
+      - name: Ensure repository is formatted
+        run: make format && git diff --quiet
+      - name: Run static analysis
+        run: make cppcheck
+      - name: Build the repository
+        run: make
