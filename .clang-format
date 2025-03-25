@@ -1,0 +1,51 @@
+# use Google's C++ style guide as the base
+BasedOnStyle: Google
+
+---
+
+# customize the base for C
+Language: C
+AlignAfterOpenBracket: Align
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true
+ColumnLimit: 100
+IndentCaseLabels: true
+IndentWidth: 4
+SeparateDefinitionBlocks: Always
+SortIncludes: false
+SpaceBeforeParens: Never
+
+---
+
+# customize the base for Cpp
+# this is included because clang-format treats *.h files as C++ files
+Language: Cpp
+AlignAfterOpenBracket: Align
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true
+ColumnLimit: 100
+IndentCaseLabels: true
+IndentWidth: 4
+SeparateDefinitionBlocks: Always
+SortIncludes: false
+SpaceBeforeParens: Never
