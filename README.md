@@ -15,9 +15,16 @@ This project will follow many of the steps outlined in the *bare-metal-programmi
 
 | Directory        | Description                                                           |
 |------------------|-----------------------------------------------------------------------|
+| .github/workflow | Workflow configuration files for GitHub Actions                       |
+| build/           | Build outputs (object files + executable)                             |
 | docs/            | Documentation (e.g., coding guidelines)                               |
+| src/             | Source files (.c/.h)                                                  |
+| .clang-format    | Configuration file for `clang-format` tool to define code style rules |
+| .dockerignore    | List of files to exclude from the Docker build context                |
 | .gitignore       | List of files to exclude from Git repository                          |
+| Dockerfile       | Script used to build the Docker image for this project                |
 | LICENSE          | Tells others what they can and cannot do with the repository          |
+| Makefile         | Script that automates the build process                               |
 | README.md        | This markdown file                                                    |
 
 ## Prerequisites
@@ -51,9 +58,29 @@ This project will follow many of the steps outlined in the *bare-metal-programmi
 
 5. Use a serial console to monitor UART output (if applicable)
 
+## Continuous Integration
+
+A simple continuous integration (CI) system is implemented to have some protection against erroneous code changes and formatting. This system is developed using GitHub Actions, Docker, and some of the aforementioned tools. The CI system's configuration is written in `ci.yml` located in [.github/workflows](.github/workflows).
+
+The GitHub Action performs static analysis, checks formatting, and build capability on each commit pushed to GitHub. The GitHub Action blocks the commits from being merged until they pass. While a CI system is in place to demonstrate the principle, it only provides some weak protection against erroneous code changes and formatting. A more rigourous CI system is suggested in a professional environment that also performs unit testing, performance testing, integration testing, and hardware/software testing on the real target.
+
+The GitHub Action implemented in this repository runs inside a Docker container which has the required software preinstalled. The Docker container is generated using a Docker image and it is available in a [repository on Docker Hub](https://hub.docker.com/repository/docker/meetkumarp/stm32cubeclt-1.18.0).
+
 ## Coding Guidelines
 
-The coding guidelines are described in [docs/coding_guidelines.md](docs/coding_guidelines.md).
+The coding guidelines are described in [docs/coding_guidelines.md](docs/coding_guidelines.md). Some guidelines are enforced by the code formatter (clang-format). There is a phony target in the `Makefile` to format all source files with `clang-format`.
+
+```bash
+make format
+```
+
+## Static Analysis
+
+A static analyzer is used to detect and flag the types of bugs that a compiler might fail to catch. In this project, `cppcheck` is used as the static analyzer. There is a phony target in the `Makefile` to analyze all files with `cppcheck`.
+
+```bash
+make cppcheck
+```
 
 ## Version Control
 

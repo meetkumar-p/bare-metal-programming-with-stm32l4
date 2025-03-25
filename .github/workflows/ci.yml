@@ -1,0 +1,16 @@
+on: [push]
+jobs:
+  build_and_static_analysis:
+    runs-on: ubuntu-latest
+    container:
+      image: meetkumarp/stm32cubeclt-1.18.0:latest
+    env:
+      STM32_CUBE_CLT: /opt/st/stm32cubeclt_1.18.0
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          submodules: "true"
+      - run: make format && git diff --quiet
+      - run: make cppcheck
+      - run: make
