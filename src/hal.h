@@ -87,6 +87,70 @@ typedef struct RCC_Registers
 #define RCC             ((RCC_Registers *) 0x40021000)
 // clang-format on
 
+// clang-format off
+/**
+ * @brief SysTick Control and Status Register.
+ * 
+ */
+typedef struct SysTick_CS_Register
+{
+  uint32_t ENABLE                       : 1;
+  uint32_t TICKINT                      : 1;
+  uint32_t CLKSOURCE                    : 1;
+  uint32_t                              : 13;
+  uint32_t COUNTFLAG                    : 1;
+  uint32_t                              : 15;
+} SysTick_CS_Register;
+
+/**
+ * @brief SysTick Reload Value Register.
+ * 
+ */
+typedef struct SysTick_RV_Register
+{
+  uint32_t RELOAD                       : 24;
+  uint32_t                              : 8;
+} SysTick_RV_Register;
+
+/**
+ * @brief SysTick Current Value Register.
+ * 
+ */
+typedef struct SysTick_CV_Register
+{
+  uint32_t CURRENT                      : 32;
+} SysTick_CV_Register;
+
+/**
+ * @brief SysTick Calibration Register.
+ * 
+ */
+typedef struct SysTick_C_Register
+{
+  uint32_t TENMS                        : 24;
+  uint32_t                              : 6;
+  uint32_t SKEW                         : 1;
+  uint32_t NOREF                        : 1;
+} SysTick_C_Register;
+
+// clang-format on
+
+/**
+ * @brief SysTick Registers.
+ *
+ */
+typedef struct SysTick_Registers
+{
+    volatile SysTick_CS_Register STCSR;
+    volatile SysTick_RV_Register STRVR;
+    volatile SysTick_CV_Register STCVR;
+    volatile SysTick_C_Register STCR;
+} SysTick_Registers;
+
+// clang-format off
+#define SYSTICK         ((SysTick_Registers *) 0xE000E010)
+// clang-format on
+
 /**
  * @brief General Purpose I/O pin modes. Enum values are per datasheet (section 8.4.1).
  *
@@ -114,6 +178,13 @@ void gpio_set_mode(const uint16_t pin, const GPIO_Modes mode);
  * @param val   GPIO pin value.
  */
 void gpio_write(const uint16_t pin, const bool val);
+
+/**
+ * @brief SysTick initialization.
+ *
+ * @param ticks Number of clock periods before SysTick IRQ is triggered.
+ */
+void systick_init(const uint32_t ticks);
 
 /**
  * @brief Produce a busy wait use NOP assembly instruction.
