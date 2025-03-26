@@ -5,6 +5,10 @@
 #include <stdbool.h>
 
 // clang-format off
+#define SYSCLK              (4000000U)
+// clang-format on
+
+// clang-format off
 #define BIT(x)          (1UL << (x))
 #define PIN(bank, num)  ((((bank) - 'A') << 8) | (num))
 #define PINNO(pin)      (pin & 255)
