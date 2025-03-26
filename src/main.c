@@ -3,7 +3,6 @@
 #include <stdint.h>
 
 // clang-format off
-#define SYSCLK              (4000000U)
 #define SYSTICK_FREQUENCY   (1000U)
 // clang-format on
 
