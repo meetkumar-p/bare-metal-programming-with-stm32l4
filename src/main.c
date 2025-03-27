@@ -4,6 +4,9 @@
 
 // clang-format off
 #define SYSTICK_FREQUENCY   (1000U)
+
+#define USART_DEBUG         (USART1)
+#define USART_BAUD_RATE     (115200U)
 // clang-format on
 
 static volatile uint32_t systick_count;
@@ -30,16 +33,15 @@ int main(void)
     uint16_t led_user_1 = PIN('A', 5);
     uint16_t led_user_2 = PIN('B', 14);
 
-    // enable GPIO clocks for LEDs
-    RCC->AHB2ENR |= BIT(PINBANK(led_user_1));
-    RCC->AHB2ENR |= BIT(PINBANK(led_user_2));
-
     // set LEDs to output mode
     gpio_set_mode(led_user_1, GPIO_MODE_OUTPUT);
     gpio_set_mode(led_user_2, GPIO_MODE_OUTPUT);
 
     // initialize SysTick to trigger SysTick IRQ every 1ms
     systick_init(SYSCLK / SYSTICK_FREQUENCY);
+
+    // initialize debug USART
+    usart_init(USART_DEBUG, USART_BAUD_RATE);
 
     // declare timer and 500 ms period
     uint32_t timer = 0, period = 500;
@@ -48,10 +50,20 @@ int main(void)
     {
         if(timer_expired(&timer, period, systick_count))
         {
-            static bool on = true;
-            gpio_write(led_user_1, on);
+            // toggle LED states and write them to debug USART
+            static bool on = false;
             on = !on;
-            gpio_write(led_user_2, on);
+            gpio_write(led_user_1, on);
+            gpio_write(led_user_2, !on);
+
+            if(on)
+            {
+                usart_write_buffer(USART_DEBUG, "LED 1: on\tLED 2: off\r\n", 22);
+            }
+            else
+            {
+                usart_write_buffer(USART_DEBUG, "LED 1: off\tLED 2: on\r\n", 22);
+            }
         }
     }
 
