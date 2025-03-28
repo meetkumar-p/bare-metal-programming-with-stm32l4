@@ -40,6 +40,8 @@ SOURCES_WITH_HEADERS = \
 
 SOURCES = \
 			$(MAIN_FILE) \
+			$(SRC_DIR)/startup.c \
+			$(SRC_DIR)/syscalls.c \
 			$(SOURCES_WITH_HEADERS)
 
 HEADERS = \
