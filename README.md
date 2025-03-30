@@ -18,6 +18,7 @@ This project will follow many of the steps outlined in the *bare-metal-programmi
 | .github/workflow | Workflow configuration files for GitHub Actions                       |
 | build/           | Build outputs (object files + executable)                             |
 | docs/            | Documentation (e.g., coding guidelines)                               |
+| lib/             | External dependencies                                                 |
 | src/             | Source files (.c/.h)                                                  |
 | .clang-format    | Configuration file for `clang-format` tool to define code style rules |
 | .dockerignore    | List of files to exclude from the Docker build context                |
