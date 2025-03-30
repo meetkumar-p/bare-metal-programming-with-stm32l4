@@ -32,9 +32,6 @@ int main(void)
     gpio_set_mode(led_user_1, GPIO_MODE_OUTPUT);
     gpio_set_mode(led_user_2, GPIO_MODE_OUTPUT);
 
-    // initialize SysTick to trigger SysTick IRQ every 1ms
-    systick_init(SYSCLK / SYSTICK_FREQUENCY);
-
     // initialize debug USART
     usart_init(USART_DEBUG, USART_BAUD_RATE);
 
@@ -57,6 +54,15 @@ int main(void)
     }
 
     return 0;
+}
+
+void SystemInit(void)
+{
+    // enable SYSCFG
+    RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+
+    // configure SysTick to trigger SysTick IRQ every 1ms
+    SysTick_Config(SYSCLK_FREQ / SYSTICK_FREQUENCY);
 }
 
 void SysTick_Handler(void)

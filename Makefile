@@ -4,13 +4,18 @@ STMGCC_BIN_DIR = $(STMGCC_ROOT_DIR)/bin
 STMFLASH_ROOT_DIR = $(STM32_CUBE_CLT)/STM32CubeProgrammer
 STMFLASH_BIN_DIR = $(STMFLASH_ROOT_DIR)/bin
 
+CMSIS_CORE_DIR = lib/cmsis_core
+CMSIS_L4_DIR = lib/cmsis_l4
+
 SRC_DIR = src
 BUILD_DIR = build
 OBJ_DIR = $(BUILD_DIR)/obj
 BIN_DIR = $(BUILD_DIR)/bin
 
 INCLUDE_DIRS = \
-				$(SRC_DIR)
+				$(SRC_DIR) \
+				$(CMSIS_CORE_DIR)/CMSIS/Core/Include \
+				$(CMSIS_L4_DIR)/Include
 
 # Toolchain
 CC = $(STMGCC_BIN_DIR)/arm-none-eabi-gcc
@@ -33,18 +38,20 @@ TARGET = $(BIN_DIR)/firmware
 
 MAIN_FILE = $(SRC_DIR)/main.c
 
-LINKER_SCRIPT = $(SRC_DIR)/link.ld
+LINKER_SCRIPT = $(SRC_DIR)/STM32L4S5VITX_FLASH.ld
 
 SOURCES_WITH_HEADERS = \
 						$(SRC_DIR)/hal.c
 
 SOURCES = \
 			$(MAIN_FILE) \
-			$(SRC_DIR)/startup.c \
+			$(CMSIS_L4_DIR)/Source/Templates/gcc/startup_stm32l4s5xx.s \
 			$(SRC_DIR)/syscalls.c \
 			$(SOURCES_WITH_HEADERS)
 
 HEADERS = \
+			$(CMSIS_CORE_DIR)/CMSIS/Core/Include/core_cm4.h \
+			$(CMSIS_L4_DIR)/Include/stm32l4s5xx.h \
 			$(SOURCES_WITH_HEADERS:.c=.h)
 
 OBJECT_NAMES = $(patsubst %.s, %.o, $(patsubst %.c, %.o, $(SOURCES)))
@@ -59,7 +66,17 @@ CPPCHECK_FLAGS = \
 					--suppress=missingIncludeSystem \
 					--suppress=unmatchedSuppression \
 					--suppress=unusedFunction \
-					--suppress=checkersReport
+					--suppress=checkersReport \
+					--suppress=preprocessorErrorDirective \
+					--config-exclude=lib
+
+IGNORE_FILES_FORMAT_CPPCHECK = \
+					$(CMSIS_CORE_DIR)/CMSIS/Core/Include/core_cm4.h \
+					$(CMSIS_L4_DIR)/Include/stm32l4s5xx.h \
+					$(CMSIS_L4_DIR)/Source/Templates/gcc/startup_stm32l4s5xx.s
+
+SOURCES_FORMAT_CPPCHECK = $(filter-out $(IGNORE_FILES_FORMAT_CPPCHECK),$(SOURCES))
+HEADERS_FORMAT_CPPCHECK = $(filter-out $(IGNORE_FILES_FORMAT_CPPCHECK),$(HEADERS))
 
 # Flags
 CORE = cortex-m4
@@ -104,11 +121,11 @@ $(OBJ_DIR)/%.o: %.s
 	$(CC) $(CFLAGS) -c -o $@ $^
 
 # Linking
-$(TARGET): $(OBJECTS)
+$(TARGET): $(OBJECTS) $(HEADERS) $(LINKER_SCRIPT)
 	mkdir -p $(dir $@)
 	$(CC) \
 			-T $(LINKER_SCRIPT) \
-			$^ \
+			$(OBJECTS) \
 			$(LDFLAGS) \
 			-o $@
 	$(OBJCOPY) -O binary $(TARGET) $(TARGET).bin
@@ -126,7 +143,7 @@ cppcheck:
 	$(CPPCHECK) \
 					$(CPPCHECK_FLAGS) \
 					$(addprefix -I, $(INCLUDE_DIRS)) \
-					$(SOURCES)
+					$(SOURCES_FORMAT_CPPCHECK)
 
 flash: $(TARGET)
 	$(FLASH) -c port=SWD -e all
@@ -135,7 +152,7 @@ flash: $(TARGET)
 	$(FLASH) -c port=SWD disconnect
 
 format:
-	$(FORMAT) -i $(SOURCES) $(HEADERS)
+	$(FORMAT) -i $(SOURCES_FORMAT_CPPCHECK) $(HEADERS_FORMAT_CPPCHECK)
 
 size: $(TARGET)
 	$(SIZE) --format=berkeley $^
