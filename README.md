@@ -34,7 +34,7 @@ This project will follow many of the steps outlined in the *bare-metal-programmi
 
 - **B-L4S5I-IOT01A** development board or equivalent STM32L4 microcontroller board
 
-## Software
+### Software
 
 | Tool                  | Description                        | Link                                                                                                                   |
 |-----------------------|------------------------------------|------------------------------------------------------------------------------------------------------------------------|
