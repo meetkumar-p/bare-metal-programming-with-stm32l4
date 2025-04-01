@@ -4,8 +4,6 @@
 #include <stdio.h>
 
 // clang-format off
-#define SYSTICK_FREQUENCY   (1000U)
-
 #define USART_DEBUG         (USART1)
 #define USART_BAUD_RATE     (115200U)
 // clang-format on
@@ -28,9 +26,9 @@ int main(void)
     uint16_t led_user_1 = PIN('A', 5);
     uint16_t led_user_2 = PIN('B', 14);
 
-    // set LEDs to output mode
-    gpio_set_mode(led_user_1, GPIO_MODE_OUTPUT);
-    gpio_set_mode(led_user_2, GPIO_MODE_OUTPUT);
+    // set LEDs' GPIO pins as output pins
+    gpio_output(led_user_1);
+    gpio_output(led_user_2);
 
     // initialize debug USART
     usart_init(USART_DEBUG, USART_BAUD_RATE);
@@ -54,15 +52,6 @@ int main(void)
     }
 
     return 0;
-}
-
-void SystemInit(void)
-{
-    // enable SYSCFG
-    RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
-
-    // configure SysTick to trigger SysTick IRQ every 1ms
-    SysTick_Config(SYSCLK_FREQ / SYSTICK_FREQUENCY);
 }
 
 void SysTick_Handler(void)

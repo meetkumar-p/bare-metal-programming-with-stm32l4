@@ -1,43 +1,61 @@
 #include "hal.h"
 
-void gpio_set_mode(const uint16_t pin, const GPIO_Modes mode)
+static GPIO_TypeDef *gpio_bank(uint16_t pin)
 {
-    GPIO_TypeDef *gpio_bank = GPIO(PINBANK(pin));
-    int pin_number = PINNO(pin);
+    return GPIO(PINBANK(pin));
+}
+
+void gpio_init(const uint16_t pin, const GPIO_Modes mode, const GPIO_Output_Types output_type,
+               const GPIO_Output_Speeds output_speed, const GPIO_Pull_Type pull_type,
+               const uint8_t alt_func_num)
+{
+    GPIO_TypeDef *gpio = gpio_bank(pin);
+    uint8_t pin_num = (uint8_t)PINNO(pin);
 
     // enable GPIO clock for pin
     RCC->AHB2ENR |= BIT(PINBANK(pin));
 
-    // clear existing pin mode
-    gpio_bank->MODER &= ~(3U << (pin_number * 2));
-
-    // set new pin mode
-    gpio_bank->MODER |= (mode & 3U) << (pin_number * 2);
+    SETBITS(gpio->MODER, 0x3UL << (pin_num * 2), ((uint32_t)mode) << (pin_num * 2));
+    SETBITS(gpio->OTYPER, 0x1UL << pin_num, ((uint32_t)output_type) << pin_num);
+    SETBITS(gpio->OSPEEDR, 0x3UL << (pin_num * 2), ((uint32_t)output_speed) << (pin_num * 2));
+    SETBITS(gpio->PUPDR, 0x3UL << (pin_num * 2), ((uint32_t)pull_type) << (pin_num * 2));
+    SETBITS(gpio->AFR[pin_num >> 3], 0xFUL << ((pin_num & 7) * 4),
+            ((uint32_t)alt_func_num) << ((pin_num & 7) * 4));
 }
 
-void gpio_set_af(const uint16_t pin, const uint8_t af_num)
+void gpio_input(const uint16_t pin)
 {
-    GPIO_TypeDef *gpio_bank = GPIO(PINBANK(pin));
-    int pin_number = PINNO(pin);
+    gpio_init(pin, GPIO_MODE_INPUT, GPIO_OTYPE_PUSH_PULL, GPIO_OSPEED_HIGH, GPIO_PUPDR_NONE, 0);
+}
 
-    // clear and set new alternate function number
-    gpio_bank->AFR[pin_number >> 3] &= ~(15UL << ((pin_number & 7) * 4));
-    gpio_bank->AFR[pin_number >> 3] |= ((uint32_t)af_num) << ((pin_number & 7) * 4);
+void gpio_output(const uint16_t pin)
+{
+    gpio_init(pin, GPIO_MODE_OUTPUT, GPIO_OTYPE_PUSH_PULL, GPIO_OSPEED_HIGH, GPIO_PUPDR_NONE, 0);
+}
+
+bool gpio_read(const uint16_t pin)
+{
+    return gpio_bank(pin)->IDR & BIT(PINNO(pin)) ? true : false;
+}
+
+void gpio_toggle(const uint16_t pin)
+{
+    GPIO_TypeDef *gpio = gpio_bank(pin);
+    uint32_t mask = BIT(PINNO(pin));
+
+    gpio->BSRR = mask << (gpio->ODR & mask ? 16 : 0);
 }
 
 void gpio_write(const uint16_t pin, const bool val)
 {
-    GPIO_TypeDef *gpio_bank = GPIO(PINBANK(pin));
-    int pin_number = PINNO(pin);
-
-    // write pin state
-    gpio_bank->BSRR = (1U << pin_number) << (val ? 0 : 16);
+    gpio_bank(pin)->BSRR = BIT(PINNO(pin)) << (val ? 0 : 16);
 }
 
-void usart_init(USART_TypeDef *const usart, uint32_t baud)
+void usart_init(USART_TypeDef *const usart, const uint32_t baud)
 {
-    uint8_t af = 0;
+    uint8_t alt_func_num = 0;
     uint16_t tx_pin = 0, rx_pin = 0;
+    uint32_t bus_frequency = 0;
 
     // enable clock for USART peripheral
     if(USART1 == usart)
@@ -64,25 +82,34 @@ void usart_init(USART_TypeDef *const usart, uint32_t baud)
     // define the alternate function number
     if(USART1 == usart)
     {
-        af = 7;
+        alt_func_num = 7;
     }
     else if(UART4 == usart)
     {
-        af = 8;
+        alt_func_num = 8;
     }
 
-    // set mode and function for Tx/Rx pins
-    gpio_set_mode(tx_pin, GPIO_MODE_AF);
-    gpio_set_af(tx_pin, af);
-    gpio_set_mode(rx_pin, GPIO_MODE_AF);
-    gpio_set_af(rx_pin, af);
+    // define bus frequency
+    if(USART1 == usart)
+    {
+        bus_frequency = APB2_FREQUENCY;
+    }
+    else if(UART4 == usart)
+    {
+        bus_frequency = APB1_FREQUENCY;
+    }
+
+    // initialize GPIO pins for USART
+    gpio_init(rx_pin, GPIO_MODE_AF, GPIO_OTYPE_PUSH_PULL, GPIO_OSPEED_HIGH, GPIO_PUPDR_NONE,
+              alt_func_num);
+    gpio_init(tx_pin, GPIO_MODE_AF, GPIO_OTYPE_PUSH_PULL, GPIO_OSPEED_HIGH, GPIO_PUPDR_NONE,
+              alt_func_num);
 
     // disable the parameterized USART
     usart->CR1 &= 0xC0000000;
 
     // clear and set new baud rate
-    usart->BRR &= 0xFFFF0000;
-    usart->BRR |= (uint16_t)(SYSCLK_FREQ / baud);
+    SETBITS(usart->BRR, USART_BRR_DIV_FRACTION | USART_BRR_DIV_MANTISSA, (bus_frequency / baud));
 
     // enable the parameterized USART and its transmitter and receiver
     usart->CR1 |= USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
