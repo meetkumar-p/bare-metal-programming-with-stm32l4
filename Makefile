@@ -47,6 +47,7 @@ SOURCES = \
 			$(MAIN_FILE) \
 			$(CMSIS_L4_DIR)/Source/Templates/gcc/startup_stm32l4s5xx.s \
 			$(SRC_DIR)/syscalls.c \
+			$(SRC_DIR)/sysinit.c \
 			$(SOURCES_WITH_HEADERS)
 
 HEADERS = \
